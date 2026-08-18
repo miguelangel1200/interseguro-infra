@@ -211,6 +211,17 @@ resource "google_service_account_iam_member" "github_actions_principal_token" {
   )
 }
 
+# Binding amplio a todo el pool: el pool ya está restringido por el
+# attribute_condition del provider a los repositorios del owner.
+resource "google_service_account_iam_member" "github_actions_pool_wide" {
+  service_account_id = google_service_account.github_actions.name
+  role               = "roles/iam.workloadIdentityUser"
+  member = format(
+    "principalSet://iam.googleapis.com/%s/*",
+    google_iam_workload_identity_pool.github_actions.name,
+  )
+}
+
 # El SA de WIF sube el tarball fuente al bucket por defecto de Cloud Build.
 resource "google_storage_bucket_iam_member" "github_actions_cloudbuild_bucket" {
   bucket = "${var.project_id}_cloudbuild"
