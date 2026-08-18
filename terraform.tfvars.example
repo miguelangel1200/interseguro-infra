@@ -1,0 +1,15 @@
+# Copia este archivo a terraform.tfvars y completa los valores.
+# NUNCA subas terraform.tfvars a un repositorio.
+
+project_id     = "interseguros-prueba"
+region         = "us-central1"
+
+auth_user      = "admin"
+auth_password  = "password123"
+
+jwt_secret     = "cambia-este-secreto-por-uno-seguro"
+jwt_issuer     = "interseguro"
+jwt_audience   = "interseguro-api"
+jwt_expires_in = "2h"
+
+cors_origin    = "*"

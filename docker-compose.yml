@@ -1,0 +1,54 @@
+# Variables JWT compartidas entre la API Go y la API Node.js.
+# En producción deben provenir de un gestor de secretos, no del repositorio.
+x-jwt-env: &jwt-env
+  JWT_SECRET: ${JWT_SECRET:-interseguro-dev-secret}
+  JWT_ISSUER: ${JWT_ISSUER:-interseguro}
+  JWT_AUDIENCE: ${JWT_AUDIENCE:-interseguro-api}
+  JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-2h}
+
+services:
+  go-api:
+    build:
+      context: ./interseguro-go-api
+    container_name: interseguro-go-api
+    environment:
+      PORT: "8080"
+      # Apunta a la API Node dentro de la red de Docker Compose.
+      NODE_API_URL: "http://node-api:3000"
+      <<: *jwt-env
+    ports:
+      - "8080:8080"
+    networks:
+      - interseguro-net
+
+  node-api:
+    build:
+      context: ./interseguro-node-api
+    container_name: interseguro-node-api
+    environment:
+      PORT: "3000"
+      # Credenciales de autenticación (prueba técnica). En producción usar
+      # gestor de secretos y contraseñas hasheadas.
+      AUTH_USER: ${AUTH_USER:-admin}
+      AUTH_PASSWORD: ${AUTH_PASSWORD:-password123}
+      <<: *jwt-env
+    ports:
+      - "3000:3000"
+    networks:
+      - interseguro-net
+
+  frontend:
+    build:
+      context: ./interseguro-frontend
+    container_name: interseguro-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - go-api
+      - node-api
+    networks:
+      - interseguro-net
+
+networks:
+  interseguro-net:
+    driver: bridge
