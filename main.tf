@@ -228,3 +228,16 @@ resource "google_storage_bucket_iam_member" "github_actions_cloudbuild_bucket" {
   role   = "roles/storage.objectAdmin"
   member = "serviceAccount:${google_service_account.github_actions.email}"
 }
+
+# El SA de WIF necesita crear builds (gcloud builds submit) y usar los servicios.
+resource "google_project_iam_member" "github_actions_cloudbuild" {
+  project = var.project_id
+  role    = "roles/cloudbuild.builds.editor"
+  member  = "serviceAccount:${google_service_account.github_actions.email}"
+}
+
+resource "google_project_iam_member" "github_actions_serviceusage" {
+  project = var.project_id
+  role    = "roles/serviceusage.serviceUsageConsumer"
+  member  = "serviceAccount:${google_service_account.github_actions.email}"
+}
