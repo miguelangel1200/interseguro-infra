@@ -12,4 +12,4 @@ jwt_issuer     = "interseguro"
 jwt_audience   = "interseguro-api"
 jwt_expires_in = "2h"
 
-cors_origin    = "*"
+cors_origin    = "https://interseguro-frontend.pages.dev"

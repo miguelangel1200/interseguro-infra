@@ -15,6 +15,7 @@ services:
       PORT: "8080"
       # Apunta a la API Node dentro de la red de Docker Compose.
       NODE_API_URL: "http://node-api:3000"
+      CORS_ORIGIN: "${CORS_ORIGIN:-*}"
       <<: *jwt-env
     ports:
       - "8080:8080"
@@ -31,6 +32,7 @@ services:
       # gestor de secretos y contraseñas hasheadas.
       AUTH_USER: ${AUTH_USER:-admin}
       AUTH_PASSWORD: ${AUTH_PASSWORD:-password123}
+      CORS_ORIGIN: "${CORS_ORIGIN:-*}"
       <<: *jwt-env
     ports:
       - "3000:3000"

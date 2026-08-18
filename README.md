@@ -17,8 +17,10 @@ Cloud Run: interseguro-go-api   (POST /process, rotación + factorización QR)
 Cloud Run: interseguro-node-api (POST /auth/login, POST /statistics)
 ```
 
-CORS habilitado en ambas APIs. JWT compartido (`JWT_SECRET`/`ISSUER`/`AUDIENCE`).
-Acceso público (IAM `allUsers`); la protección real es el JWT.
+CORS habilitado en ambas APIs y **restringido** al origen del frontend
+(`https://interseguro-frontend.pages.dev`) vía `cors_origin`. JWT compartido
+(`JWT_SECRET`/`ISSUER`/`AUDIENCE`). Acceso público (IAM `allUsers`); la
+protección real es el JWT.
 
 ## Repositorios (privados)
 
@@ -67,7 +69,7 @@ Health checks: `GET /health` en ambas APIs.
 | JWT_SECRET      | definido en `terraform.tfvars` (no versionado) |
 
 > **Producción:** usar Secret Manager para JWT/credenciales, contraseñas
-> hasheadas y CORS restringido al origen real. Rotar el JWT_SECRET.
+> hasheadas y rotar el JWT_SECRET. El CORS ya está restringido al origen real.
 
 ## Despliegue local
 

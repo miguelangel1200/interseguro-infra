@@ -109,6 +109,10 @@ resource "google_cloud_run_v2_service" "go_api" {
         value = google_cloud_run_v2_service.node_api.uri
       }
       env {
+        name  = "CORS_ORIGIN"
+        value = var.cors_origin
+      }
+      env {
         name  = "JWT_SECRET"
         value = var.jwt_secret
       }
