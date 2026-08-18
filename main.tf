@@ -30,6 +30,69 @@ resource "google_artifact_registry_repository" "images" {
   format        = "DOCKER"
 }
 
+# --- Secret Manager: valores sensibles (JWT, credenciales) ---
+resource "google_secret_manager_secret" "auth_user" {
+  project   = var.project_id
+  secret_id = "auth-user"
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "auth_user" {
+  secret      = google_secret_manager_secret.auth_user.id
+  secret_data = var.auth_user
+}
+
+resource "google_secret_manager_secret" "auth_password" {
+  project   = var.project_id
+  secret_id = "auth-password"
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "auth_password" {
+  secret      = google_secret_manager_secret.auth_password.id
+  secret_data = var.auth_password
+}
+
+resource "google_secret_manager_secret" "jwt_secret" {
+  project   = var.project_id
+  secret_id = "jwt-secret"
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "jwt_secret" {
+  secret      = google_secret_manager_secret.jwt_secret.id
+  secret_data = var.jwt_secret
+}
+
+# El SA de runtime de Cloud Run (compute por defecto) necesita leer los secrets.
+data "google_compute_default_service_account" "default" {
+  project = var.project_id
+}
+
+resource "google_secret_manager_secret_iam_member" "auth_user_accessor" {
+  secret_id = google_secret_manager_secret.auth_user.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${data.google_compute_default_service_account.default.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "auth_password_accessor" {
+  secret_id = google_secret_manager_secret.auth_password.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${data.google_compute_default_service_account.default.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "jwt_secret_accessor" {
+  secret_id = google_secret_manager_secret.jwt_secret.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${data.google_compute_default_service_account.default.email}"
+}
+
 # --- API Node.js (auth + estadísticas) ---
 resource "google_cloud_run_v2_service" "node_api" {
   name     = "interseguro-node-api"
@@ -52,16 +115,31 @@ resource "google_cloud_run_v2_service" "node_api" {
       }
 
       env {
-        name  = "AUTH_USER"
-        value = var.auth_user
+        name = "AUTH_USER"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.auth_user.id
+            version = "latest"
+          }
+        }
       }
       env {
-        name  = "AUTH_PASSWORD"
-        value = var.auth_password
+        name = "AUTH_PASSWORD"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.auth_password.id
+            version = "latest"
+          }
+        }
       }
       env {
-        name  = "JWT_SECRET"
-        value = var.jwt_secret
+        name = "JWT_SECRET"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.jwt_secret.id
+            version = "latest"
+          }
+        }
       }
       env {
         name  = "JWT_ISSUER"
@@ -113,8 +191,13 @@ resource "google_cloud_run_v2_service" "go_api" {
         value = var.cors_origin
       }
       env {
-        name  = "JWT_SECRET"
-        value = var.jwt_secret
+        name = "JWT_SECRET"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.jwt_secret.id
+            version = "latest"
+          }
+        }
       }
       env {
         name  = "JWT_ISSUER"
@@ -226,29 +309,20 @@ resource "google_service_account_iam_member" "github_actions_pool_wide" {
   )
 }
 
-# El SA de WIF sube el tarball fuente al bucket por defecto de Cloud Build.
-resource "google_storage_bucket_iam_member" "github_actions_cloudbuild_bucket" {
-  bucket = "${var.project_id}_cloudbuild"
-  role   = "roles/storage.objectAdmin"
-  member = "serviceAccount:${google_service_account.github_actions.email}"
+# El CI sube imágenes con docker push directo (no usa Cloud Build ni el bucket
+# de source), por lo que solo necesita escritura en los repositorios de AR.
+resource "google_artifact_registry_repository_iam_member" "github_actions_writer" {
+  for_each   = google_artifact_registry_repository.images
+  location   = each.value.location
+  project    = each.value.project
+  repository = each.value.repository_id
+  role       = "roles/artifactregistry.writer"
+  member     = "serviceAccount:${google_service_account.github_actions.email}"
 }
 
-# El SA de WIF necesita crear builds (gcloud builds submit) y usar los servicios.
-resource "google_project_iam_member" "github_actions_cloudbuild" {
-  project = var.project_id
-  role    = "roles/cloudbuild.builds.editor"
-  member  = "serviceAccount:${google_service_account.github_actions.email}"
-}
-
+# Permiso mínimo para consumir servicios (invocado por las APIs de GCP).
 resource "google_project_iam_member" "github_actions_serviceusage" {
   project = var.project_id
   role    = "roles/serviceusage.serviceUsageConsumer"
-  member  = "serviceAccount:${google_service_account.github_actions.email}"
-}
-
-# Push de imágenes a Artifact Registry (docker build + docker push en el runner).
-resource "google_project_iam_member" "github_actions_artifact_registry" {
-  project = var.project_id
-  role    = "roles/artifactregistry.writer"
   member  = "serviceAccount:${google_service_account.github_actions.email}"
 }

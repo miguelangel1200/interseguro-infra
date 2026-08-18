@@ -5,7 +5,9 @@ project_id     = "interseguros-prueba"
 region         = "us-central1"
 
 auth_user      = "admin"
-auth_password  = "password123"
+# AUTH_PASSWORD debe contener un hash bcrypt (p. ej. generado con bcryptjs),
+# nunca la contraseña en texto plano. El de abajo es el hash de "password123".
+auth_password  = "$2b$10$TUTDxxdMlDFF/RWFarXTcuMceWFdtpIMvdwt3FNhJGopg0QZXC.Tu"
 
 jwt_secret     = "cambia-este-secreto-por-uno-seguro"
 jwt_issuer     = "interseguro"
