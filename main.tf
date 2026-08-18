@@ -191,6 +191,14 @@ resource "google_service_account_iam_member" "github_actions_impersonation" {
   )
 }
 
+# El SA debe poder emitir su propio access token: gcloud (vía la sesión WIF)
+# lo impersona para obtener el token con el que sube el source y crea el build.
+resource "google_service_account_iam_member" "github_actions_self_token" {
+  service_account_id = google_service_account.github_actions.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:${google_service_account.github_actions.email}"
+}
+
 # El SA de WIF sube el tarball fuente al bucket por defecto de Cloud Build.
 resource "google_storage_bucket_iam_member" "github_actions_cloudbuild_bucket" {
   bucket = "${var.project_id}_cloudbuild"
