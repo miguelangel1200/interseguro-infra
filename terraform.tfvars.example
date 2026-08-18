@@ -5,9 +5,11 @@ project_id     = "interseguros-prueba"
 region         = "us-central1"
 
 auth_user      = "admin"
-# AUTH_PASSWORD debe contener un hash bcrypt (p. ej. generado con bcryptjs),
-# nunca la contraseña en texto plano. El de abajo es el hash de "password123".
-auth_password  = "$2b$10$TUTDxxdMlDFF/RWFarXTcuMceWFdtpIMvdwt3FNhJGopg0QZXC.Tu"
+# AUTH_PASSWORD debe contener un hash bcrypt (generado con bcryptjs), nunca la
+# contraseña en texto plano. Genera el tuyo:
+#   node -e "console.log(require('bcryptjs').hashSync(process.env.AUTH_PASSWORD, 10))"
+# (la credencial de acceso se entrega por correo)
+auth_password  = "reemplaza-por-hash-bcrypt"
 
 jwt_secret     = "cambia-este-secreto-por-uno-seguro"
 jwt_issuer     = "interseguro"

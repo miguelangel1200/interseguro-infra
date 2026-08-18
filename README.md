@@ -62,14 +62,9 @@ Health checks: `GET /health` en ambas APIs.
 
 ## Credenciales
 
-| Variable      | Valor                                                          |
-|---------------|----------------------------------------------------------------|
-| AUTH_USER     | `admin`                                                        |
-| Login         | `admin` / `password123` (se valida contra un hash bcrypt)      |
-| AUTH_PASSWORD | hash bcrypt de `password123` (en Secret Manager)               |
-| JWT_SECRET    | secreto aleatorio en Secret Manager (no versionado)            |
-
-`terraform.tfvars` no se versiona; `terraform.tfvars.example` es la plantilla.
+Las credenciales de acceso y los secretos de la entrega se comparten **por
+correo** (no se documentan en el repositorio). `terraform.tfvars` no se
+versiona; `terraform.tfvars.example` es la plantilla para valores locales.
 
 ## Despliegue local
 

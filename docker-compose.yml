@@ -29,9 +29,10 @@ services:
     environment:
       PORT: "3000"
       # Credenciales de autenticación. AUTH_PASSWORD acepta un hash bcrypt o
-      # texto plano (solo dev); en producción debe ser siempre un hash.
+      # texto plano (solo dev); defínelas con variables de entorno:
+      #   $env:AUTH_USER=...  $env:AUTH_PASSWORD=...
       AUTH_USER: ${AUTH_USER:-admin}
-      AUTH_PASSWORD: ${AUTH_PASSWORD:-password123}
+      AUTH_PASSWORD: ${AUTH_PASSWORD:-dev-placeholder}
       CORS_ORIGIN: "${CORS_ORIGIN:-*}"
       <<: *jwt-env
     ports:
