@@ -199,6 +199,18 @@ resource "google_service_account_iam_member" "github_actions_self_token" {
   member             = "serviceAccount:${google_service_account.github_actions.email}"
 }
 
+# La sesión federada también necesita emitir access token sobre el SA en
+# algunos flujos de gcloud (getAccessToken/generateAccessToken).
+resource "google_service_account_iam_member" "github_actions_principal_token" {
+  service_account_id = google_service_account.github_actions.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member = format(
+    "principalSet://iam.googleapis.com/%s/attribute.repository/%s/*",
+    google_iam_workload_identity_pool.github_actions.name,
+    var.github_owner,
+  )
+}
+
 # El SA de WIF sube el tarball fuente al bucket por defecto de Cloud Build.
 resource "google_storage_bucket_iam_member" "github_actions_cloudbuild_bucket" {
   bucket = "${var.project_id}_cloudbuild"
