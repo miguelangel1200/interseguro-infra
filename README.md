@@ -19,8 +19,11 @@ Cloud Run: interseguro-node-api (POST /auth/login, POST /statistics)
 
 CORS habilitado en ambas APIs y **restringido** al origen del frontend
 (`https://interseguro-frontend.pages.dev`) vía `cors_origin`. JWT compartido
-(`JWT_SECRET`/`ISSUER`/`AUDIENCE`). Acceso público (IAM `allUsers`); la
-protección real es el JWT.
+(`JWT_SECRET`/`ISSUER`/`AUDIENCE`) almacenado en **Secret Manager**. Acceso
+público (IAM `allUsers`); la protección real es el JWT.
+
+> **Seguridad:** consulta [`SECURITY.md`](./SECURITY.md) para el detalle completo
+> de las medidas aplicadas (Fases A/B/C), limitaciones y hoja de ruta.
 
 ## Repositorios (privados)
 
@@ -62,14 +65,16 @@ Health checks: `GET /health` en ambas APIs.
 
 ## Credenciales (solo prueba técnica)
 
-| Variable        | Valor       |
-|-----------------|-------------|
-| AUTH_USER       | `admin`     |
-| AUTH_PASSWORD   | `password123`|
-| JWT_SECRET      | definido en `terraform.tfvars` (no versionado) |
+| Variable      | Valor                                                              |
+|---------------|--------------------------------------------------------------------|
+| AUTH_USER     | `admin`                                                            |
+| Login         | `admin` / `password123` (la contraseña se compara contra un hash bcrypt) |
+| AUTH_PASSWORD | hash bcrypt de `password123` (en Secret Manager, nunca en claro)    |
+| JWT_SECRET    | secreto aleatorio en Secret Manager (no versionado)                 |
 
-> **Producción:** usar Secret Manager para JWT/credenciales, contraseñas
-> hasheadas y rotar el JWT_SECRET. El CORS ya está restringido al origen real.
+> **Producción:** rotar el `jwt-secret` y el `auth-password` (Secret Manager),
+> restringir IAM y considerar un BFF para sesiones httpOnly. Ver
+> [`SECURITY.md`](./SECURITY.md).
 
 ## Despliegue local
 
